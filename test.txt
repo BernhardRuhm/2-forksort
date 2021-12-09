@@ -1,0 +1,10 @@
+Tretboot
+Yacht
+Angelboot
+Jetski
+Segelboot
+Uboot
+Piratenschiff
+Schiff
+Kreuzfahrtschiff
+Motorboot

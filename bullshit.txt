@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
+
+int main(int argc, char **argv){
+
+
+    int p1[2], p2[2];
+    int status = 0;
+    pid_t pid;
+    char *line1 = NULL;
+    char *line2 = NULL;
+    char *solution = NULL;
+    ssize_t nread;
+    size_t len;
+    
+    if((nread = getline(&line1, &len, stdin) == -1)){
+        exit(EXIT_SUCCESS);
+    }
+
+    if((nread = getline(&line2, &len, stdin) == -1)){
+        line1 = "child\n";
+        fwrite(line1, 1, strlen(line1), stdout);
+       
+        //fprintf(stderr, "%d\n", getpid());
+        exit(EXIT_SUCCESS);
+    }
+    
+    pipe(p1);
+    pipe(p2);
+    write(p1[1], line1, strlen(line1));
+
+    pid = fork();
+    
+    if(pid < 0){
+        fprintf(stderr, "fork failed");
+        exit(EXIT_FAILURE);
+    }
+    if(pid == 0){
+        
+        close(p1[1]);
+        dup2(p1[0], STDIN_FILENO);
+        close(p1[0]);
+
+        close(p2[0]);
+        dup2(p2[1], STDOUT_FILENO);
+        close(p2[1]);
+        if (execlp("./forksort",argv[0] ,NULL) == -1)
+            perror("exec");
+        exit(EXIT_FAILURE);
+    }
+
+    
+    if (waitpid(pid, &status, 0) < 0) {
+        perror("waitpid");
+        exit(EXIT_FAILURE);
+    }
+    fprintf(stderr, "%d\n", getpid());
+    close(p2[1]);
+    close(p1[1]);
+    close(p1[0]);
+    dup2(p2[0], STDIN_FILENO);
+
+    if((nread = getline(&solution, &len, stdin) == -1)){
+        fprintf(stderr, "read failed");
+        exit(EXIT_SUCCESS);
+    }
+    fwrite(solution, 1, strlen(solution), stdout);
+    close(p2[0]);
+
+    free(line1);
+    free(line2);
+
+    return EXIT_SUCCESS;
+
+
+}
+
+    
+
+
+
+     
