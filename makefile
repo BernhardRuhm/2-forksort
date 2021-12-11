@@ -9,10 +9,8 @@ all: forksort
 forksort: $(OBJECTS)
 	$(CC) $(FLAGS) -o $@ $^
 
-*.o: *.c
-	$(CC) $(FLAGS) -c -o $@ $<
-
 forksort.o: forksort.c
+	$(CC) $(FLAGS) -c -o $@ $<
 
 clean:
 	rm -rf *.o forksort
