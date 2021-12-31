@@ -76,16 +76,22 @@ static void fork_child(child *child ){
             break;
         case 0:
         //child
-            //dup write end
             close(child->write_pipe[0]);
-            if(dup2(child->write_pipe[1], STDOUT_FILENO) == -1)
+            close(child->read_pipe[1]);
+
+            //dup write end
+            if(dup2(child->write_pipe[1], STDOUT_FILENO) == -1){
+                close(child->write_pipe[1]);
+                close(child->read_pipe[0]);
                 error_exit("duplicate write end failed", errno);
+            }
             close(child->write_pipe[1]);
 
             //dup read end
-            close(child->read_pipe[1]);
-            if(dup2(child->read_pipe[0], STDIN_FILENO) == -1)
+            if(dup2(child->read_pipe[0], STDIN_FILENO) == -1){
+                close(child->read_pipe[0]);
                 error_exit("duplicate read end failed", errno);
+            }
             close(child->read_pipe[0]);
 
             if(execlp(prog, prog, NULL) == -1)
@@ -259,8 +265,7 @@ int main(int argc, char **argv){
     fprintf(c2_write, "%s", line2);
   
     //read and write remaining lines to children
-    while (1)
-    {
+    while (1){
         if((getline(&line1, &length1, stdin)) == -1)
             break;
         fprintf(c1_write, "%s", line1);
